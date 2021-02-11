@@ -2,7 +2,7 @@
 
 ## Tags
 
--	[`13.0`](https://github.com/ingeint/odoolec/tree/master/13.0)
+-	[`13.0`](https://github.com/ingeint/odoontu/tree/master/13.0)
 
 ## Otros links
 
