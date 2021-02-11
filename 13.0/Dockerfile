@@ -40,10 +40,11 @@ RUN apt-get update \
                 build-essential \
                 libxslt-dev \
                 libzip-dev \
-                wkhtmltopdf \
                 libffi-dev \
                 cargo \
-    && rm -rf /var/lib/apt/lists/*
+    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb \
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
+    && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
 
 RUN pip3 install num2words phonenumbers psycopg2-binary watchdog xlwt psutil cryptography xades pyopenssl xmlsig suds-jurko
 
