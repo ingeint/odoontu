@@ -45,7 +45,7 @@ RUN apt-get update \
                 cargo \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install num2words phonenumbers psycopg2-binary watchdog xlwt psutil cryptography xades pyopenssl xmlsig
+RUN pip3 install num2words phonenumbers psycopg2-binary watchdog xlwt psutil cryptography xades pyopenssl xmlsig suds-jurko
 
 RUN git clone https://github.com/odoo/odoo.git --depth=1 --branch $ODOO_VERSION --single-branch /odoo
 
