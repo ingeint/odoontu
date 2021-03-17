@@ -1,9 +1,10 @@
 FROM ubuntu:20.04
 
 ENV ODOO_VERSION=14.0
-ENV ODOO_CONF=/etc/odoo/odoo.conf
-
-COPY odoo.conf $ODOO_CONF
+ENV ODOO_ETC=/etc/odoo
+ENV ODOO_CONF=$ODOO_ETC/conf
+ENV ODOO_DATA=$ODOO_ETC/data
+ENV ODOO_HOME=/odoo
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -42,35 +43,30 @@ RUN apt-get update \
                 libzip-dev \
                 libffi-dev \
                 cargo \
-                openssh-server fail2ban \
-                python3-dev \
+                openssh-server \
+                fail2ban \
                 libxml2-dev \
                 libxslt1-dev \
-                zlib1g-dev \
-                libsasl2-dev \
-                libldap2-dev \
-                build-essential \
-                libssl-dev \
-                libffi-dev \
                 libmysqlclient-dev \
                 libjpeg-dev \
-                libpq-dev \
-                libjpeg8-dev \
                 liblcms2-dev \
                 libblas-dev \
-                libatlas-base-dev \                
+                libatlas-base-dev \
     && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb \
     && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
 
 RUN pip3 install num2words phonenumbers psycopg2-binary watchdog xlwt psutil cryptography xades pyopenssl xmlsig suds-jurko pandas
-
-RUN git clone https://github.com/odoo/odoo.git --depth=1 --branch $ODOO_VERSION --single-branch /odoo
-
+RUN git clone https://github.com/odoo/odoo.git --depth=1 --branch $ODOO_VERSION --single-branch $ODOO_HOME
 RUN ln -s /odoo/odoo-bin /usr/bin/odoo
 
-WORKDIR /odoo
+RUN useradd -Ms /bin/bash odoo
+RUN mkdir $ODOO_ETC $ODOO_DATA $ODOO_CONF
+COPY odoo.conf $ODOO_CONF
+RUN chown -R odoo:odoo $ODOO_ETC $ODOO_HOME
 
+WORKDIR $ODOO_HOME
 RUN pip3 install -r requirements.txt
 
-CMD ["odoo", "-c", "/etc/odoo/odoo.conf"]
+USER odoo
+CMD ["odoo", "-c", "/etc/odoo/conf/odoo.conf"]

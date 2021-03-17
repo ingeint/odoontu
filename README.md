@@ -11,7 +11,7 @@
 ## Comandos
 
 ```
-docker build -t odoontu:13.0 ./13.0
+docker build -t odoontu:14.0 ./14.0
 docker-compose up -d
 ```
 
@@ -36,11 +36,11 @@ services:
       odoo_network:
 
   odoo:
-    image: odoontu:13.0
+    image: odoontu:14.0
     environment:
       - TZ=America/Guayaquil
     volumes:
-      - odoo_filestore:/var/lib/odoo
+      - odoo_filestore:/etc/odoo/data
     ports:
       - 8069:8069
     networks:
