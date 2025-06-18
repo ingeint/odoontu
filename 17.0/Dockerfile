@@ -99,8 +99,6 @@ RUN mkdir -p /var/lib/odoo/filestore && chown -R odoo:odoo /var/lib/odoo && chmo
 
 RUN mkdir -p /mnt/extra-addons && chown -R odoo:odoo /mnt/extra-addons && chmod -R 775 /mnt/extra-addons
 
-COPY custom-addons/theme /mnt/extra-addons/
-
 # Configurar el entrypoint
 USER odoo
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

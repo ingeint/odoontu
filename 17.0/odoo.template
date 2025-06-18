@@ -5,6 +5,6 @@ db_port = ${DB_PORT}
 db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
 db_name = ${DB_NAME}
-addons_path = /odoo/odoo/addons,/odoo/addons,/mnt/extra-addons
+addons_path = ${ADDONS_PATH}
 db_filter = ${DB_NAME}
 
