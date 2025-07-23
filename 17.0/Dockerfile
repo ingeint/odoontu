@@ -82,8 +82,10 @@ RUN ln -s /odoo/odoo-bin /usr/bin/odoo
 RUN useradd -Ms /bin/bash odoo
 RUN mkdir -p $ODOO_ETC $ODOO_DATA $ODOO_CONF
 
+RUN chown -R odoo:odoo /etc/odoo/conf && chmod -R 775 /etc/odoo/conf
+
 # Copiar los scripts y configuraciones
-COPY odoo.template $ODOO_ETC/odoo.template
+COPY odoo.template /etc/odoo/conf/odoo.template
 COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
@@ -97,9 +99,11 @@ RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /var/lib/odoo/filestore && chown -R odoo:odoo /var/lib/odoo && chmod -R 775 /var/lib/odoo
 
+RUN mkdir -p /var/lib/odoo/sessions && chown -R odoo:odoo /var/lib/odoo/sessions && chmod -R 775 /var/lib/odoo/sessions
+
 RUN mkdir -p /mnt/extra-addons && chown -R odoo:odoo /mnt/extra-addons && chmod -R 775 /mnt/extra-addons
 
-COPY custom-addons/theme /mnt/extra-addons/
+ENV ODOO_RC /etc/odoo/conf/odoo.conf
 
 # Configurar el entrypoint
 USER odoo
