@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+  oduntu:
+    image: ocurieles/oduntu:17-demo
+    hostname: 'oduntu'
+    ports:
+      - 3069:8069
+    environment:
+      - TZ=America/Caracas
+      - DB_NAME=oduntu18
+      - DB_HOST=172.18.0.1
+      - DB_PORT=5432
+      - DB_USER=odoo
+      - DB_PASS=odoo
+    networks:
+      - network_idempiere
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4096M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+networks:
+  network_idempiere:
+    external: true
+
