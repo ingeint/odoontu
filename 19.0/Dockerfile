@@ -7,8 +7,8 @@ ENV ODOO_CONF_DIR=$ODOO_ETC/conf
 ENV ODOO_DATA=/var/lib/Odoo
 ENV ODOO_ADDONS=/mnt/extra-addons
 
-# Crear usuario odoo con UID/GID fijo
-RUN groupadd -g 1000 odoo && useradd -u 1000 -g 1000 -m -s /bin/bash odoo
+# Crear usuario odoo (dejamos que el sistema asigne UID/GID)
+RUN useradd -m -s /bin/bash odoo
 
 # Dependencias básicas y libssl1.1 (para wkhtml en 24.04)
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -121,7 +121,7 @@ RUN chmod +x /usr/local/bin/wait-for-psql.py /usr/local/bin/entrypoint.sh
 WORKDIR ${ODOO_HOME}
 RUN /opt/venv/bin/pip install -r requirements.txt
 
-# (Opcional, pero ayuda a que los volúmenes nuevos hereden bien los permisos)
+# (Opcional) Declarar volumen de datos para que nuevos volúmenes hereden la estructura
 VOLUME ${ODOO_DATA}
 
 # Ejecutar como usuario no-root
