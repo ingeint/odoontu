@@ -5,6 +5,13 @@ db_port = ${DB_PORT}
 db_user = ${DB_USER}
 db_password = ${DB_PASSWORD}
 db_name = ${DB_NAME}
+dbfilter = ^${DB_NAME}$
 addons_path = ${ADDONS_PATH}
-db_filter = ${DB_NAME}
-
+data_dir = /var/lib/Odoo
+proxy_mode = True
+limit_time_cpu = 3600
+limit_time_real = 7200
+limit_memory_soft = 2147483648
+limit_memory_hard = 2684354560
+logfile = /var/log/odoo/odoo.log
+log_level = info

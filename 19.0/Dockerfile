@@ -110,6 +110,10 @@ RUN mkdir -p ${ODOO_ETC} ${ODOO_CONF_DIR} ${ODOO_DATA} ${ODOO_ADDONS} \
     && chown -R odoo:odoo ${ODOO_ETC} ${ODOO_DATA} ${ODOO_ADDONS} ${ODOO_HOME} \
     && chmod -R 775 ${ODOO_DATA}
 
+RUN mkdir -p /home/odoo/.local/share \
+    && chown -R odoo:odoo /home/odoo/.local \
+    && ln -s ${ODOO_DATA} /home/odoo/.local/share/Odoo
+
 # Copiar template y scripts
 COPY odoo.template ${ODOO_ETC}/odoo.template
 COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
@@ -121,7 +125,10 @@ RUN chmod +x /usr/local/bin/wait-for-psql.py /usr/local/bin/entrypoint.sh
 WORKDIR ${ODOO_HOME}
 RUN /opt/venv/bin/pip install -r requirements.txt
 
-# (Opcional) Declarar volumen de datos para que nuevos volúmenes hereden la estructura
+# Logs
+RUN mkdir -p /var/log/odoo && chown -R odoo:odoo /var/log/odoo
+
+# Declarar volumen de datos para que nuevos volúmenes hereden la estructura
 VOLUME ${ODOO_DATA}
 
 # Ejecutar como usuario no-root
