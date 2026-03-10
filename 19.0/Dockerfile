@@ -2,41 +2,51 @@ FROM ubuntu:24.04
 
 ENV ODOO_VERSION=19.0
 ENV ODOO_HOME=/odoo
-ENV ODOO_ETC=/etc/odoo
-ENV ODOO_CONF_DIR=$ODOO_ETC/conf
-ENV ODOO_DATA=/var/lib/Odoo
+ENV ODOO_ETC=/home/odoo/etc
+ENV ODOO_CONF_DIR=/home/odoo/etc/conf
+ENV ODOO_DATA=/var/lib/odoo
 ENV ODOO_ADDONS=/mnt/extra-addons
 
-# Crear usuario odoo (dejamos que el sistema asigne UID/GID)
+# Crear usuario odoo
 RUN useradd -m -s /bin/bash odoo
 
-# Dependencias básicas y libssl1.1 (para wkhtml en 24.04)
+# Dependencias base
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         wget \
         software-properties-common \
-    && wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb \
-    && dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+        curl \
+        git \
+        vim \
+        ca-certificates \
+        gnupg \
+        dirmngr \
+        fonts-noto-cjk \
+        build-essential \
+        xz-utils \
+        gosu \
+    && rm -rf /var/lib/apt/lists/*
 
 # Python base y venv
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         python3 \
         python3-venv \
         python3-dev \
-        python3-pip
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
 RUN /opt/venv/bin/pip install --upgrade pip
 
+# Repositorio oficial PostgreSQL para cliente 16
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+
 # Paquetes del sistema necesarios para Odoo
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        vim \
-        git \
-        curl \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         postgresql-client \
+        postgresql-client-16 \
         ca-certificates \
-        dirmngr \
         fonts-noto-cjk \
         gnupg \
         libssl-dev \
@@ -59,7 +69,6 @@ RUN apt-get update \
         libpq-dev \
         libsasl2-dev \
         libldap2-dev \
-        build-essential \
         libxslt-dev \
         libzip-dev \
         libffi-dev \
@@ -68,23 +77,26 @@ RUN apt-get update \
         fail2ban \
         libxml2-dev \
         libxslt1-dev \
-        libmysqlclient-dev \
+        default-libmysqlclient-dev \
         libjpeg-dev \
         liblcms2-dev \
         libblas-dev \
         libatlas-base-dev \
         openjdk-11-jdk \
         gettext \
-    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb \
-    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
-    && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
+        xfonts-75dpi \
+        xfonts-base \
+        fontconfig \
+    && rm -rf /var/lib/apt/lists/*
 
-# Último cliente de PostgreSQL 16
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client-16
+# wkhtmltopdf compatible con Ubuntu 24.04 usando build jammy
+RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ./wkhtmltox_0.12.6.1-2.jammy_amd64.deb \
+    && rm -f wkhtmltox_0.12.6.1-2.jammy_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
 
-# Librerías Python adicionales (en el venv)
+# Librerías Python adicionales en el venv
 RUN /opt/venv/bin/pip install \
         num2words \
         phonenumbers \
@@ -102,7 +114,7 @@ RUN /opt/venv/bin/pip install \
         cachetools \
         qifparse
 
-# Clonar Odoo (último commit de 19.0)
+# Clonar Odoo
 RUN git clone https://github.com/odoo/odoo.git --depth=1 --branch ${ODOO_VERSION} --single-branch ${ODOO_HOME}
 RUN ln -s /odoo/odoo-bin /usr/bin/odoo
 
@@ -120,7 +132,8 @@ COPY odoo.template ${ODOO_ETC}/odoo.template
 COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/wait-for-psql.py /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/wait-for-psql.py /usr/local/bin/entrypoint.sh \
+    && chown -R odoo:odoo ${ODOO_ETC}
 
 # Instalar dependencias de Odoo en el venv
 WORKDIR ${ODOO_HOME}
@@ -129,9 +142,8 @@ RUN /opt/venv/bin/pip install -r requirements.txt
 # Logs
 RUN mkdir -p /var/log/odoo && chown -R odoo:odoo /var/log/odoo
 
-# Declarar volumen de datos para que nuevos volúmenes hereden la estructura
+# Declarar volumen de datos
 VOLUME ${ODOO_DATA}
 
 # Ejecutar como usuario no-root
-USER odoo
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
