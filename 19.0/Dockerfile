@@ -99,7 +99,8 @@ RUN /opt/venv/bin/pip install \
         rsa==4.9 \
         pycryptodome \
         pypeg2 \
-        cachetools
+        cachetools \
+        qifparse
 
 # Clonar Odoo (último commit de 19.0)
 RUN git clone https://github.com/odoo/odoo.git --depth=1 --branch ${ODOO_VERSION} --single-branch ${ODOO_HOME}
